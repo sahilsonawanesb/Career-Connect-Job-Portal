@@ -18,7 +18,7 @@ app.use(cors({
 }));
 
 // your routes here
-import userRoutes from "./routes/user.routes.js";
+import userRoutes from "./routes/userRoutes.js";
 app.use("/api/v1/user", userRoutes);
 
 export default app;
