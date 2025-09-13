@@ -1,9 +1,11 @@
-import React, { useContext, useEffect, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import { Context } from "../../main";
 import axios from "axios";
 import toast from "react-hot-toast";
 import { useNavigate } from "react-router-dom";
 import ResumeModal from "./ResumeModal";
+import { API_BASE_URL } from "../../../config/api.js";
+import PropTypes from "prop-types";
 
 const MyApplications = () => {
   const { user } = useContext(Context);
@@ -18,7 +20,7 @@ const MyApplications = () => {
     try {
       if (user && user.role === "Employer") {
         axios
-          .get("http://localhost:4000/api/v1/application/employer/getall", {
+          .get(`${API_BASE_URL}/api/v1/application/employer/getall`, {
             withCredentials: true,
           })
           .then((res) => {
@@ -26,7 +28,7 @@ const MyApplications = () => {
           });
       } else {
         axios
-          .get("http://localhost:4000/api/v1/application/jobseeker/getall", {
+          .get(`${API_BASE_URL}/api/v1/application/jobseeker/getall`, {
             withCredentials: true,
           })
           .then((res) => {
@@ -45,7 +47,7 @@ const MyApplications = () => {
   const deleteApplication = (id) => {
     try {
       axios
-        .delete(`http://localhost:4000/api/v1/application/delete/${id}`, {
+        .delete(`${API_BASE_URL}/api/v1/application/delete/${id}`, {
           withCredentials: true,
         })
         .then((res) => {
@@ -57,6 +59,37 @@ const MyApplications = () => {
     } catch (error) {
       toast.error(error.response.data.message);
     }
+  };
+  
+  JobSeekerCard.propTypes = {
+    element: PropTypes.shape({
+      _id: PropTypes.string.isRequired,
+      name: PropTypes.string,
+      email: PropTypes.string,
+      phone: PropTypes.string,
+      address: PropTypes.string,
+      coverLetter: PropTypes.string,
+      resume: PropTypes.shape({
+        url: PropTypes.string,
+      }),
+    }).isRequired,
+    deleteApplication: PropTypes.func.isRequired,
+    openModal: PropTypes.func.isRequired,
+  };
+  
+  EmployerCard.propTypes = {
+    element: PropTypes.shape({
+      _id: PropTypes.string.isRequired,
+      name: PropTypes.string,
+      email: PropTypes.string,
+      phone: PropTypes.string,
+      address: PropTypes.string,
+      coverLetter: PropTypes.string,
+      resume: PropTypes.shape({
+        url: PropTypes.string,
+      }),
+    }).isRequired,
+    openModal: PropTypes.func.isRequired,
   };
 
   const openModal = (imageUrl) => {
@@ -79,35 +112,31 @@ const MyApplications = () => {
               <h4>No Applications Found</h4>{" "}
             </>
           ) : (
-            applications.map((element) => {
-              return (
-                <JobSeekerCard
-                  element={element}
-                  key={element._id}
-                  deleteApplication={deleteApplication}
-                  openModal={openModal}
-                />
-              );
-            })
+            applications.map((element) => (
+              <JobSeekerCard
+                element={element}
+                key={element._id}
+                deleteApplication={deleteApplication}
+                openModal={openModal}
+              />
+            ))
           )}
         </div>
       ) : (
         <div className="container">
-          <h1>Applications From Job Seekers</h1>
+          <h1>Applications Received</h1>
           {applications.length <= 0 ? (
             <>
               <h4>No Applications Found</h4>
             </>
           ) : (
-            applications.map((element) => {
-              return (
-                <EmployerCard
-                  element={element}
-                  key={element._id}
-                  openModal={openModal}
-                />
-              );
-            })
+            applications.map((element) => (
+              <EmployerCard
+                element={element}
+                key={element._id}
+                openModal={openModal}
+              />
+            ))
           )}
         </div>
       )}
@@ -120,73 +149,87 @@ const MyApplications = () => {
 
 export default MyApplications;
 
+// eslint-disable-next-line react/prop-types
 const JobSeekerCard = ({ element, deleteApplication, openModal }) => {
+  const handleResumeClick = () => {
+    if (element.resume?.url) {
+      openModal(element.resume.url);
+    }
+  };
+
+  const handleDelete = async () => {
+    if (window.confirm("Are you sure you want to delete this application?")) {
+      deleteApplication(element._id);
+    }
+  };
+
   return (
-    <>
-      <div className="job_seeker_card">
-        <div className="detail">
-          <p>
-            <span>Name:</span> {element.name}
-          </p>
-          <p>
-            <span>Email:</span> {element.email}
-          </p>
-          <p>
-            <span>Phone:</span> {element.phone}
-          </p>
-          <p>
-            <span>Address:</span> {element.address}
-          </p>
-          <p>
-            <span>CoverLetter:</span> {element.coverLetter}
-          </p>
-        </div>
-        <div className="resume">
+    <div className="job_seeker_card">
+      <div className="detail">
+        <p><span>Name:</span> {element.name}</p>
+        <p><span>Email:</span> {element.email}</p>
+        <p><span>Phone:</span> {element.phone}</p>
+        <p><span>Address:</span> {element.address}</p>
+        <p><span>Cover Letter:</span> {element.coverLetter}</p>
+      </div>
+      <div className="resume">
+        {element.resume?.url ? (
           <img
             src={element.resume.url}
-            alt="resume"
-            onClick={() => openModal(element.resume.url)}
+            alt={`Resume for ${element.name}`}
+            onClick={handleResumeClick}
+            style={{ cursor: 'pointer' }}
+            onError={(e) => {
+              e.target.src = '/placeholder-resume.png'; // Add a fallback image
+              e.target.alt = 'Resume not available';
+            }}
           />
-        </div>
-        <div className="btn_area">
-          <button onClick={() => deleteApplication(element._id)}>
-            Delete Application
-          </button>
-        </div>
+        ) : (
+          <p>No resume available</p>
+        )}
       </div>
-    </>
+      <div className="btn_area">
+        <button onClick={handleDelete} className="delete-btn">
+          Delete Application
+        </button>
+      </div>
+    </div>
   );
 };
 
+// eslint-disable-next-line react/prop-types
 const EmployerCard = ({ element, openModal }) => {
+  const handleResumeClick = () => {
+    if (element.resume?.url) {
+      openModal(element.resume.url);
+    }
+  };
+
   return (
-    <>
-      <div className="job_seeker_card">
-        <div className="detail">
-          <p>
-            <span>Name:</span> {element.name}
-          </p>
-          <p>
-            <span>Email:</span> {element.email}
-          </p>
-          <p>
-            <span>Phone:</span> {element.phone}
-          </p>
-          <p>
-            <span>Address:</span> {element.address}
-          </p>
-          <p>
-            <span>CoverLetter:</span> {element.coverLetter}
-          </p>
-        </div>
-        <div className="resume">
+    <div className="job_seeker_card">
+      <div className="detail">
+        <p><span>Name:</span> {element.name}</p>
+        <p><span>Email:</span> {element.email}</p>
+        <p><span>Phone:</span> {element.phone}</p>
+        <p><span>Address:</span> {element.address}</p>
+        <p><span>Cover Letter:</span> {element.coverLetter}</p>
+      </div>
+      <div className="resume">
+        {element.resume?.url ? (
           <img
             src={element.resume.url}
-            alt="resume"
-            onClick={() => openModal(element.resume.url)}
+            alt={`Resume for ${element.name}`}
+            onClick={handleResumeClick}
+            style={{ cursor: 'pointer' }}
+            onError={(e) => {
+              e.target.src = '/placeholder-resume.png';
+              e.target.alt = 'Resume not available';
+            }}
           />
-        </div>
+        ) : (
+          <p>No resume available</p>
+        )}
       </div>
-    </>
+    </div>
   );
 };

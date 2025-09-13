@@ -1,4 +1,5 @@
-import React from "react";
+
+import PropTypes from "prop-types";
 
 const ResumeModal = ({ imageUrl, onClose }) => {
   return (
@@ -12,5 +13,10 @@ const ResumeModal = ({ imageUrl, onClose }) => {
     </div>
   );
 };
+ResumeModal.propTypes = {
+  imageUrl: PropTypes.string.isRequired,
+  onClose: PropTypes.func.isRequired,
+};
 
 export default ResumeModal;
+
