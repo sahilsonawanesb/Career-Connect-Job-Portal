@@ -6,7 +6,7 @@ import { FaRegUser } from "react-icons/fa";
 import axios from "axios";
 import toast from "react-hot-toast";
 import { Context } from "../../main";
-import { API_BASE_URL } from "../../../config/api.js";
+import  API_BASE_URL  from "../../../config/api.js";
 
 const Login = () => {
   const [email, setEmail] = useState("");
