@@ -1,28 +1,39 @@
 import express from "express";
 import cors from "cors";
 import dotenv from 'dotenv';
+import cookieParser from "cookie-parser";
+
+dotenv.config();
 
 const app = express();
-dotenv.config();
 app.use(express.json());
 
+
+
+app.use(cookieParser());
+
+import cors from "cors";
+
 const allowedOrigins = [
-  process.env.FRONTEND_URL,   // frontend on Render
-  "http://localhost:5173"     // local dev
+  process.env.FRONTEND_URL,
+  "http://localhost:5173"
 ];
 
 app.use(cors({
-  origin: function (origin, callback) {
-    // allow requests with no origin (like Postman or curl)
-    if (!origin || allowedOrigins.includes(origin)) {
+  origin: function(origin, callback) {
+    if (!origin) return callback(null, true); // allow Postman/curl
+    if (allowedOrigins.includes(origin)) {
       callback(null, true);
     } else {
       callback(new Error("Not allowed by CORS"));
     }
   },
-  methods: ["GET", "POST", "PUT", "DELETE"],
-  credentials: true
+  credentials: true,
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"]
 }));
+
+// Handle preflight requests
+app.options("*", cors());
 
 
 // your routes here
