@@ -12,7 +12,7 @@ app.use(express.json());
 
 app.use(cookieParser());
 
-import cors from "cors";
+
 
 const allowedOrigins = [
   process.env.FRONTEND_URL,
